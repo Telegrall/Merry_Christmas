@@ -1,0 +1,482 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
+<title>До 31 декабря — новогодний отсчёт</title>
+<style>
+  * { box-sizing: border-box; }
+
+  html, body {
+    margin: 0; padding: 0; height: 100%;
+    overflow: hidden;
+    touch-action: none;
+    user-select: none;
+    -webkit-user-select: none;
+    -webkit-tap-highlight-color: transparent;
+    -webkit-touch-callout: none;
+  }
+
+  body {
+    font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+    background: radial-gradient(1200px 600px at 50% -10%, #1e3a5f 0%, #0b1a2f 50%, #04080f 100%);
+    color: #eaf4ff;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 20px 16px;
+    position: relative;
+  }
+
+  /* фоновые звёзды */
+  .stars { position: fixed; inset: 0; pointer-events: none; z-index: 0; }
+  .star-dot {
+    position: absolute; background: #fff; border-radius: 50%;
+    animation-name: star-twinkle; animation-timing-function: ease-in-out;
+    animation-iteration-count: infinite; animation-direction: alternate;
+  }
+  @keyframes star-twinkle {
+    from { opacity: .12; transform: scale(.8); }
+    to   { opacity: 1;   transform: scale(1.25); }
+  }
+
+  /* слой снега */
+  .snow-layer { position: fixed; inset: 0; pointer-events: none; overflow: hidden; z-index: 9; }
+  .flake {
+    position: absolute; top: 0; left: 0; line-height: 1;
+    color: #dceeff;
+    font-family: 'Segoe UI Symbol', 'Arial Unicode MS', sans-serif;
+    text-shadow: 0 0 8px rgba(160, 210, 255, .9);
+    animation-name: fall;
+    animation-timing-function: linear;
+    animation-fill-mode: forwards;
+    will-change: transform, opacity;
+  }
+  @keyframes fall {
+    0%   { transform: translate3d(0, -15vh, 0) rotate(0deg); opacity: 0; }
+    8%   { opacity: 1; }
+    92%  { opacity: 1; }
+    100% { transform: translate3d(var(--drift, 0px), 112vh, 0) rotate(720deg); opacity: 0; }
+  }
+
+  /* снежинки от пальца */
+  .flake.drag { animation-name: fallFromPointer; }
+  @keyframes fallFromPointer {
+    0%   { transform: translate3d(0, 0, 0) rotate(0deg); opacity: 0; }
+    10%  { opacity: 1; }
+    90%  { opacity: .9; }
+    100% { transform: translate3d(var(--drift, 0px), 110vh, 0) rotate(540deg); opacity: 0; }
+  }
+
+  /* контент */
+  .content {
+    position: relative; z-index: 2; width: 100%; max-width: 720px;
+    display: flex; flex-direction: column; align-items: center; gap: 22px;
+  }
+
+  h1 {
+    margin: 0;
+    font-size: clamp(1.15rem, 4vw, 1.9rem);
+    font-weight: 600; text-align: center; letter-spacing: .5px;
+    background: linear-gradient(90deg, #8fd3ff, #ffffff, #8fd3ff);
+    -webkit-background-clip: text; background-clip: text; color: transparent;
+    filter: drop-shadow(0 0 18px rgba(120, 200, 255, .45));
+  }
+
+  /* отсчёт */
+  .countdown { display: flex; flex-wrap: wrap; justify-content: center; gap: 12px; }
+  .unit {
+    display: flex; flex-direction: column; align-items: center; justify-content: center;
+    min-width: 84px; padding: 12px 14px; border-radius: 16px;
+    background: rgba(255, 255, 255, .06);
+    border: 1px solid rgba(160, 210, 255, .22);
+    backdrop-filter: blur(8px); -webkit-backdrop-filter: blur(8px);
+    box-shadow: 0 8px 30px rgba(0, 0, 0, .35), inset 0 0 20px rgba(120, 190, 255, .06);
+  }
+  .num {
+    font-size: 1.9rem; font-weight: 700; line-height: 1.1;
+    font-variant-numeric: tabular-nums; color: #fff;
+    text-shadow: 0 0 16px rgba(140, 210, 255, .7);
+  }
+  .label {
+    margin-top: 4px; font-size: .7rem; letter-spacing: .12em;
+    text-transform: uppercase; color: #9dc2e6;
+  }
+  .unit.seconds .num { color: #ffe680; text-shadow: 0 0 18px rgba(255, 220, 90, .8); }
+  .unit.seconds.tick .num { animation: tick .4s ease; }
+  @keyframes tick {
+    0% { transform: scale(1); } 40% { transform: scale(1.18); } 100% { transform: scale(1); }
+  }
+
+  /* ёлка */
+  .tree-wrap { position: relative; width: 300px; height: 450px; }
+  .tree-wrap::before {
+    content: ""; position: absolute; left: 50%; top: 55%;
+    width: 360px; height: 360px; transform: translate(-50%, -50%);
+    background: radial-gradient(circle, rgba(70, 220, 140, .22), transparent 65%);
+    filter: blur(10px); pointer-events: none;
+  }
+  .tree {
+    position: absolute; inset: 0; transform-origin: 50% 100%;
+    animation: sway 6s ease-in-out infinite;
+  }
+  @keyframes sway {
+    0%, 100% { transform: rotate(-.6deg); } 50% { transform: rotate(.6deg); }
+  }
+  .tier {
+    position: absolute; left: 50%; transform: translateX(-50%);
+    background: linear-gradient(180deg, #35b26b 0%, #1f8a4d 55%, #136b39 100%);
+    clip-path: polygon(50% 0%, 100% 100%, 0% 100%);
+    filter: drop-shadow(0 6px 10px rgba(0, 0, 0, .35)); z-index: 1;
+  }
+  .t1 { width: 130px; height: 120px; top: 40px; }
+  .t2 { width: 195px; height: 145px; top: 130px; }
+  .t3 { width: 260px; height: 165px; top: 240px; }
+  .trunk {
+    position: absolute; left: 50%; top: 398px; width: 36px; height: 46px;
+    transform: translateX(-50%);
+    background: linear-gradient(90deg, #4a2c14, #8a5a2b 45%, #a9713a 55%, #4a2c14);
+    border-radius: 3px 3px 2px 2px; z-index: 0;
+  }
+  .star {
+    position: absolute; left: 50%; top: 0; font-size: 46px; line-height: 1;
+    color: #ffe066;
+    text-shadow: 0 0 14px #ffd000, 0 0 34px #ff9d00, 0 0 60px rgba(255, 180, 0, .6);
+    z-index: 5; animation: star-pulse 2s ease-in-out infinite;
+  }
+  @keyframes star-pulse {
+    0%, 100% { transform: translateX(-50%) scale(1) rotate(-4deg); filter: brightness(1); }
+    50%      { transform: translateX(-50%) scale(1.12) rotate(4deg); filter: brightness(1.35); }
+  }
+
+  /* шарики */
+  .ornament {
+    position: absolute; width: 18px; height: 18px; border-radius: 50%;
+    transform: translate(-50%, -50%); z-index: 2;
+    box-shadow:
+      0 0 14px 3px var(--glow, rgba(255, 200, 100, .85)),
+      inset -4px -5px 8px rgba(0, 0, 0, .45),
+      inset 3px 3px 7px rgba(255, 255, 255, .55);
+    transition: background-color .35s ease, box-shadow .35s ease;
+    animation: bauble-glow 2.4s ease-in-out infinite alternate;
+  }
+  @keyframes bauble-glow { from { filter: brightness(.82); } to { filter: brightness(1.18); } }
+  .ornament.pop { animation: bauble-pop .5s ease, bauble-glow 2.4s ease-in-out infinite alternate; }
+  @keyframes bauble-pop {
+    0%   { transform: translate(-50%, -50%) scale(1); }
+    45%  { transform: translate(-50%, -50%) scale(1.55); }
+    100% { transform: translate(-50%, -50%) scale(1); }
+  }
+
+  /* кнопка */
+  .snow-btn {
+    cursor: pointer; font-family: inherit; font-size: 1rem; font-weight: 600;
+    letter-spacing: .3px; color: #062033;
+    padding: 13px 28px; border: none; border-radius: 999px;
+    background: linear-gradient(135deg, #d7f0ff, #8fd3ff 55%, #b6e6ff);
+    box-shadow: 0 10px 30px rgba(110, 190, 255, .35), inset 0 -3px 0 rgba(0, 0, 0, .12);
+    transition: transform .15s ease, box-shadow .25s ease, background .3s ease, color .3s ease;
+  }
+  .snow-btn:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 14px 36px rgba(110, 190, 255, .5), inset 0 -3px 0 rgba(0, 0, 0, .12);
+  }
+  .snow-btn:active { transform: translateY(1px) scale(.98); }
+  .snow-btn.active {
+    color: #3a2400;
+    background: linear-gradient(135deg, #ffe066, #ffb703 60%, #ffd166);
+    box-shadow: 0 10px 34px rgba(255, 190, 60, .45), inset 0 -3px 0 rgba(0, 0, 0, .15);
+  }
+
+  /* адаптив */
+  @media (max-width: 420px) {
+    .countdown { gap: 6px; }
+    .unit { min-width: 60px; padding: 8px 6px; border-radius: 12px; }
+    .num { font-size: 1.35rem; }
+    .label { font-size: .55rem; letter-spacing: .06em; }
+    .content { gap: 16px; }
+  }
+  @media (max-height: 820px) { .content { zoom: .92; } }
+  @media (max-height: 740px) { .content { zoom: .84; } }
+  @media (max-height: 660px) { .content { zoom: .74; } }
+  @media (max-height: 580px) { .content { zoom: .64; } }
+  @media (max-height: 500px) { .content { zoom: .54; } }
+</style>
+</head>
+<body>
+
+<div class="stars" id="stars"></div>
+<div class="snow-layer" id="snow"></div>
+
+<main class="content">
+  <h1>До 31 декабря осталось</h1>
+
+  <div class="countdown">
+    <div class="unit"><span class="num" id="days">00</span><span class="label">дней</span></div>
+    <div class="unit"><span class="num" id="hours">00</span><span class="label">часов</span></div>
+    <div class="unit"><span class="num" id="minutes">00</span><span class="label">минут</span></div>
+    <div class="unit seconds" id="secondsUnit"><span class="num" id="seconds">00</span><span class="label">секунд</span></div>
+  </div>
+
+  <div class="tree-wrap">
+    <div class="tree" id="tree">
+      <div class="star">★</div>
+      <div class="tier t1"></div>
+      <div class="tier t2"></div>
+      <div class="tier t3"></div>
+      <div class="trunk"></div>
+    </div>
+  </div>
+
+  <button class="snow-btn" id="snowBtn" type="button">❄ Пусть идёт снег</button>
+</main>
+
+<script>
+(function () {
+  'use strict';
+
+  /* ================= ФОНОВЫЕ ЗВЁЗДЫ ================= */
+  const starsLayer = document.getElementById('stars');
+  const sf = document.createDocumentFragment();
+  for (let i = 0; i < 90; i++) {
+    const dot = document.createElement('i');
+    const size = (Math.random() * 2 + 0.7).toFixed(2);
+    dot.className = 'star-dot';
+    dot.style.cssText =
+      'width:' + size + 'px;height:' + size + 'px;' +
+      'left:' + (Math.random() * 100).toFixed(2) + '%;' +
+      'top:' + (Math.random() * 100).toFixed(2) + '%;' +
+      'animation-duration:' + (2 + Math.random() * 4).toFixed(2) + 's;' +
+      'animation-delay:' + (-Math.random() * 6).toFixed(2) + 's;';
+    sf.appendChild(dot);
+  }
+  starsLayer.appendChild(sf);
+
+  /* ================= ОТСЧЁТ ================= */
+  const el = {
+    days: document.getElementById('days'),
+    hours: document.getElementById('hours'),
+    minutes: document.getElementById('minutes'),
+    seconds: document.getElementById('seconds'),
+    secondsUnit: document.getElementById('secondsUnit')
+  };
+  const pad = n => String(n).padStart(2, '0');
+
+  function getTarget() {
+    const now = new Date();
+    const y = now.getFullYear();
+    let t = new Date(y, 11, 31, 0, 0, 0, 0);
+    if (now >= t) t = new Date(y + 1, 11, 31, 0, 0, 0, 0);
+    return t;
+  }
+  let targetDate = getTarget();
+
+  function updateCountdown() {
+    const now = new Date();
+    if (now >= targetDate) targetDate = getTarget();
+    const diff = Math.max(0, targetDate - now);
+    el.days.textContent    = pad(Math.floor(diff / 86400000));
+    el.hours.textContent   = pad(Math.floor((diff % 86400000) / 3600000));
+    el.minutes.textContent = pad(Math.floor((diff % 3600000) / 60000));
+    el.seconds.textContent = pad(Math.floor((diff % 60000) / 1000));
+    el.secondsUnit.classList.remove('tick');
+    void el.secondsUnit.offsetWidth;
+    el.secondsUnit.classList.add('tick');
+  }
+
+  /* ================= ШАРИКИ ================= */
+  const COLORS = [
+    { c: '#ff4d4d', g: 'rgba(255, 77, 77, .85)' },
+    { c: '#ffd93b', g: 'rgba(255, 217, 59, .85)' },
+    { c: '#4dd2ff', g: 'rgba(77, 210, 255, .85)' },
+    { c: '#c06bff', g: 'rgba(192, 107, 255, .85)' },
+    { c: '#4dff9e', g: 'rgba(77, 255, 158, .85)' },
+    { c: '#ff8a3b', g: 'rgba(255, 138, 59, .85)' },
+    { c: '#ff6bd6', g: 'rgba(255, 107, 214, .85)' }
+  ];
+  const POSITIONS = [
+    [150, 78], [132, 112], [172, 120],
+    [140, 168], [112, 208], [188, 202], [92, 248], [150, 252], [208, 242],
+    [134, 286], [172, 280], [103, 326], [150, 318], [197, 322],
+    [76, 368], [122, 360], [170, 366], [224, 358]
+  ];
+  const tree = document.getElementById('tree');
+  const ornaments = [];
+  POSITIONS.forEach(function (pos) {
+    const b = document.createElement('div');
+    b.className = 'ornament';
+    b.style.left = pos[0] + 'px';
+    b.style.top  = pos[1] + 'px';
+    const col = COLORS[Math.floor(Math.random() * COLORS.length)];
+    b.style.backgroundColor = col.c;
+    b.style.setProperty('--glow', col.g);
+    b.dataset.color = COLORS.indexOf(col);
+    tree.appendChild(b);
+    ornaments.push(b);
+  });
+
+  let lastOrn = -1;
+  function randomizeOrnament() {
+    if (!ornaments.length) return;
+    let i;
+    do { i = Math.floor(Math.random() * ornaments.length); }
+    while (i === lastOrn && ornaments.length > 1);
+    lastOrn = i;
+    const b = ornaments[i];
+    let ci;
+    do { ci = Math.floor(Math.random() * COLORS.length); }
+    while (ci === Number(b.dataset.color) && COLORS.length > 1);
+    const col = COLORS[ci];
+    b.dataset.color = ci;
+    b.style.backgroundColor = col.c;
+    b.style.setProperty('--glow', col.g);
+    b.classList.remove('pop');
+    void b.offsetWidth;
+    b.classList.add('pop');
+    setTimeout(() => b.classList.remove('pop'), 520);
+  }
+
+  /* ================= СНЕГОПАД (фоновый) ================= */
+  const snowLayer = document.getElementById('snow');
+  const SYMBOLS = ['❄', '❅', '❆', '✻', '✽'];
+  const MAX_FLAKES = 500;
+  const pickSymbol = () => SYMBOLS[Math.floor(Math.random() * SYMBOLS.length)];
+
+  function createFlake(prefilled) {
+    if (snowLayer.children.length > MAX_FLAKES) return;
+    const f = document.createElement('span');
+    f.className = 'flake';
+    f.textContent = pickSymbol();
+    f.style.left = (Math.random() * 100).toFixed(2) + 'vw';
+    f.style.fontSize = (10 + Math.random() * 18).toFixed(1) + 'px';
+    f.style.setProperty('--drift', (Math.random() * 200 - 100).toFixed(0) + 'px');
+    const dur = 4.5 + Math.random() * 5;
+    f.style.animationDuration = dur.toFixed(2) + 's';
+    let life = dur;
+    if (prefilled) {
+      const d = -Math.random() * dur;
+      f.style.animationDelay = d.toFixed(2) + 's';
+      life = dur + d;
+    }
+    snowLayer.appendChild(f);
+    setTimeout(() => f.remove(), life * 1000 + 300);
+  }
+
+  /* ============ СНЕГОПАД ОТ ПАЛЬЦА / МЫШИ ============ */
+  function spawnDragFlake(x, y) {
+    if (snowLayer.children.length > MAX_FLAKES) return;
+    const f = document.createElement('span');
+    f.className = 'flake drag';
+    f.textContent = pickSymbol();
+    f.style.left = x + 'px';
+    f.style.top  = y + 'px';
+    f.style.fontSize = (10 + Math.random() * 16).toFixed(1) + 'px';
+    f.style.setProperty('--drift', (Math.random() * 180 - 90).toFixed(0) + 'px');
+    const dur = 2.2 + Math.random() * 2.6;
+    f.style.animationDuration = dur.toFixed(2) + 's';
+    snowLayer.appendChild(f);
+    setTimeout(() => f.remove(), dur * 1000 + 200);
+  }
+
+  let pointerActive = false;
+  let pointerX = 0, pointerY = 0;
+  let dragTimer = null;
+
+  function burstAt(x, y, count, spread) {
+    for (let i = 0; i < count; i++) {
+      spawnDragFlake(
+        x + (Math.random() * spread - spread / 2),
+        y + (Math.random() * spread - spread / 2)
+      );
+    }
+  }
+
+  function startDrag(x, y) {
+    pointerActive = true;
+    pointerX = x; pointerY = y;
+    burstAt(x, y, 10, 70);
+    if (!dragTimer) {
+      dragTimer = setInterval(function () {
+        if (!pointerActive) return;
+        burstAt(pointerX, pointerY, 4, 90);
+      }, 45);
+    }
+  }
+
+  function stopDrag() {
+    pointerActive = false;
+    if (dragTimer) { clearInterval(dragTimer); dragTimer = null; }
+  }
+
+  function onPointerDown(e) {
+    if (e.target && e.target.closest && e.target.closest('button')) return;
+    if (e.pointerType === 'mouse' && e.button !== 0) return;
+    startDrag(e.clientX, e.clientY);
+  }
+  function onPointerMove(e) {
+    if (!pointerActive) return;
+    pointerX = e.clientX; pointerY = e.clientY;
+    burstAt(pointerX, pointerY, 3, 60);
+  }
+  function onPointerUp() { stopDrag(); }
+
+  window.addEventListener('pointerdown', onPointerDown);
+  window.addEventListener('pointermove', onPointerMove);
+  window.addEventListener('pointerup', onPointerUp);
+  window.addEventListener('pointercancel', onPointerUp);
+
+  // fallback для старых браузеров
+  if (!window.PointerEvent) {
+    window.addEventListener('mousedown', function (e) {
+      if (e.target.closest && e.target.closest('button')) return;
+      startDrag(e.clientX, e.clientY);
+    });
+    window.addEventListener('mousemove', function (e) {
+      if (!pointerActive) return;
+      pointerX = e.clientX; pointerY = e.clientY;
+      burstAt(pointerX, pointerY, 3, 60);
+    });
+    window.addEventListener('mouseup', onPointerUp);
+    window.addEventListener('touchstart', function (e) {
+      if (e.target.closest && e.target.closest('button')) return;
+      const t = e.touches[0];
+      startDrag(t.clientX, t.clientY);
+    }, { passive: true });
+    window.addEventListener('touchmove', function (e) {
+      if (!pointerActive) return;
+      const t = e.touches[0];
+      pointerX = t.clientX; pointerY = t.clientY;
+      burstAt(pointerX, pointerY, 3, 60);
+    }, { passive: true });
+    window.addEventListener('touchend', onPointerUp);
+    window.addEventListener('touchcancel', onPointerUp);
+  }
+
+  /* ============ КНОПКА ВКЛ/ВЫКЛ ============ */
+  const snowBtn = document.getElementById('snowBtn');
+  let snowing = false;
+  let snowTimer = null;
+
+  snowBtn.addEventListener('click', function () {
+    snowing = !snowing;
+    if (snowing) {
+      snowBtn.classList.add('active');
+      snowBtn.textContent = '❄ Остановить снегопад';
+      for (let i = 0; i < 40; i++) setTimeout(() => createFlake(true), Math.random() * 600);
+      snowTimer = setInterval(() => createFlake(false), 180);
+    } else {
+      snowBtn.classList.remove('active');
+      snowBtn.textContent = '❄ Пусть идёт снег';
+      clearInterval(snowTimer); snowTimer = null;
+    }
+  });
+
+  /* ============ ГЛАВНЫЙ ЦИКЛ ============ */
+  function tick() { updateCountdown(); randomizeOrnament(); }
+  function loop() { tick(); setTimeout(loop, 1000 - (Date.now() % 1000)); }
+  loop();
+})();
+</script>
+</body>
+</html>
